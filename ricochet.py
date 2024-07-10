@@ -45,7 +45,6 @@ def search(game, callback=None):
     depth = dll.search(byref(game), path, callback)
     result = []
     for value in path.raw[:depth]:
-        value = ord(value)
         color = colors[(value >> 4) & 0x0f]
         direction = DIRECTIONS[value & 0x0f]
         result.append((color, direction))
