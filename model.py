@@ -220,7 +220,7 @@ class Game(object):
         token = 'BT'
         return Game(quads=quads, robots=robots, token=token)
     def __init__(self, seed=None, quads=None, robots=None, token=None):
-        if seed:
+        if seed is not None:
             random.seed(seed)
         self.grid = create_grid(quads)
         if robots is None:
