@@ -177,7 +177,7 @@ def idx(x, y, size=16):
 
 def xy(index, size=16):
     x = index % size
-    y = index / size
+    y = index // size
     return (x, y)
 
 def rotate_quad(data, times=1):
