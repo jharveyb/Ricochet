@@ -206,7 +206,7 @@ def create_grid(quads=None):
 
 def to_mask(cell):
     result = 0
-    for letter, mask in M_LOOKUP.items():
+    for letter, mask in list(M_LOOKUP.items()):
         if letter in cell:
             result |= mask
     return result
@@ -226,7 +226,7 @@ class Game(object):
         if robots is None:
             self.robots = self.place_robots()
         else:
-            self.robots = dict(zip(COLORS, robots))
+            self.robots = dict(list(zip(COLORS, robots)))
         self.token = token or random.choice(TOKENS)
         self.moves = 0
         self.last = None
@@ -247,7 +247,7 @@ class Game(object):
                 break
         return result
     def get_robot(self, index):
-        for color, position in self.robots.iteritems():
+        for color, position in self.robots.items():
             if position == index:
                 return color
         return None
@@ -258,12 +258,12 @@ class Game(object):
         if direction in self.grid[index]:
             return False
         new_index = index + OFFSET[direction]
-        if new_index in self.robots.itervalues():
+        if new_index in iter(self.robots.values()):
             return False
         return True
     def compute_move(self, color, direction):
         index = self.robots[color]
-        robots = self.robots.values()
+        robots = list(self.robots.values())
         while True:
             if direction in self.grid[index]:
                 break
@@ -301,7 +301,7 @@ class Game(object):
         color = self.token[0]
         return self.token in self.grid[self.robots[color]]
     def key(self):
-        return tuple(self.robots.itervalues())
+        return tuple(self.robots.values())
     def search(self):
         max_depth = 1
         while True:
