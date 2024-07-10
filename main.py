@@ -29,7 +29,7 @@ class View(wx.Panel):
             return
         self.do_move(*self.path.pop(0))
         self.Refresh()
-        wx.CallLater(500, self.on_solve)
+        wx.CallLater(200, self.on_solve)
     def do_move(self, color, direction):
         start = self.game.robots[color]
         end = self.game.compute_move(color, direction)
@@ -149,7 +149,7 @@ class Frame(wx.Frame):
     def __init__(self, seed=None):
         wx.Frame.__init__(self, None, -1, 'Ricochet Robot!')
         game = model.Game(seed)
-        game = model.Game.hardest()
+        # game = model.Game.hardest()
         self.view = View(self, game)
         self.view.SetSize((800, 800))
         self.Fit()
