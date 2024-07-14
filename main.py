@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from typing import List
 
 import wx
 import sys
@@ -11,8 +12,8 @@ class View(wx.Panel):
         self.game = game
         self.color = None
         self.path = None
-        self.undo = []
-        self.lines = []
+        self.undo: List = []
+        self.lines: List = []
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_PAINT, self.on_paint)
@@ -20,10 +21,10 @@ class View(wx.Panel):
     def solve(self):
         #self.path = self.game.search()
         self.path = ricochet.search(self.game, self.callback)
-        print(', '.join(''.join(move) for move in self.path))
+        print(", ".join(("".join(move) for move in self.path)))
         self.on_solve()
     def callback(self, depth, nodes, inner, hits):
-        print('Depth: %d, Nodes: %d (%d inner, %d hits)' % (depth, nodes, inner, hits))
+        print("Depth: %d, Nodes: %d (%d inner, %d hits)" % (depth, nodes, inner, hits))
     def on_solve(self):
         if not self.path:
             return
@@ -50,15 +51,15 @@ class View(wx.Panel):
             value = chr(code)
             if value in model.COLORS:
                 self.color = value
-            elif value == 'S':
+            elif value == "S":
                 self.solve()
-            elif value == 'U' and self.undo:
+            elif value == "U" and self.undo:
                 self.undo_move()
                 self.Refresh()
-            elif value == 'N':
+            elif value == "N":
                 self.path = None
-                self.undo = []
-                self.lines = []
+                self.undo: List = []
+                self.lines: List = []
                 self.game = model.Game()
                 self.Refresh()
         elif self.color:
@@ -87,11 +88,11 @@ class View(wx.Panel):
         dc.SetBackground(wx.LIGHT_GREY_BRUSH)
         dc.Clear()
         w, h = self.GetClientSize()
-        p = 40
-        size = min((w - p) // 16, (h - p) // 16)
-        wall = size // 8
-        ox = (w - size * 16) // 2
-        oy = (h - size * 16) // 2
+        p: int = 40
+        size: int = min((w - p) // 16, (h - p) // 16)
+        wall: int = size // 8
+        ox: int = (w - size * 16) // 2
+        oy: int = (h - size * 16) // 2
         dc.SetDeviceOrigin(ox, oy)
         dc.SetClippingRegion(0, 0, size * 16 + 1, size * 16 + 1)
         dc.SetBrush(wx.WHITE_BRUSH)
@@ -99,14 +100,14 @@ class View(wx.Panel):
         for color, start, end in self.lines:
             dc.SetPen(wx.Pen(colors[color], 3, wx.DOT))
             x1, y1 = model.xy(start)
-            x1, y1 = x1 * size + size // 2, y1 * size + size // 2
+            x1, y1 = (x1 * size + size // 2, y1 * size + size // 2)
             x2, y2 = model.xy(end)
-            x2, y2 = x2 * size + size // 2, y2 * size + size // 2
+            x2, y2 = (x2 * size + size // 2, y2 * size + size // 2)
             dc.DrawLine(x1, y1, x2, y2)
         for j in range(16):
             for i in range(16):
-                x = i * size
-                y = j * size
+                x: int = i * size
+                y: int = j * size
                 index = model.idx(i, j)
                 cell  = self.game.grid[index]
                 robot = self.game.get_robot(index)
