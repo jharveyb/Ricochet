@@ -1,5 +1,6 @@
 from typing import Dict, List
 
+import rroboter
 import itertools
 import random
 
@@ -18,6 +19,8 @@ REVERSE: Dict[str, str] = {
     WEST: EAST,
 }
 
+# Offsets used to update the value representing a robot's position.
+# The top left corner is position 0 and increments LTR and top to bottom.
 OFFSET: Dict[str, int] = {
     NORTH: -16,
     EAST: 1,
@@ -25,7 +28,7 @@ OFFSET: Dict[str, int] = {
     WEST: -1,
 }
 
-# Masks
+# Bit masks to encode the walls surrounding a position + presence of a robot.
 M_NORTH: int = 0x01
 M_EAST: int = 0x02
 M_SOUTH: int = 0x04
@@ -172,17 +175,7 @@ ROTATE_WALL: Dict[str, str] = {
 }
 
 
-# Helper Functions
-def idx(x, y, size=16):
-    return y * size + x
-
-
-def xy(index, size=16):
-    x = index % size
-    y = index // size
-    return (x, y)
-
-
+# Rotate a board quadrant clockwise.
 def rotate_quad(data, times=1):
     for i in range(times):
         result = [data[index] for index in ROTATE_QUAD]
@@ -192,23 +185,30 @@ def rotate_quad(data, times=1):
 
 
 def create_grid(quads=None):
+    # Pick one of the two quadrants from each pair, and arrange them randomly.
     if quads is None:
         quads = [random.choice(pair) for pair in QUADS]
         random.shuffle(quads)
     quads = [quad.split(",") for quad in quads]
+
+    # Rotate the quadrants to fit together into a board. The quadrants are
+    # ordered LTR and top to bottom.
     quads = [rotate_quad(quads[i], i) for i in [0, 1, 3, 2]]
     result = [None for i in range(16 * 16)]
+
+    # Calculate the final indices for each board position and store the board.
     for i, quad in enumerate(quads):
-        dx, dy = xy(i, 2)
+        dx, dy = rroboter.xy(i, 2)
         for j, data in enumerate(quad):
-            x, y = xy(j, 8)
+            x, y = rroboter.xy(j, 8)
             x += dx * 8
             y += dy * 8
-            index = idx(x, y)
+            index = rroboter.idx(x, y)
             result[index] = data
     return result
 
 
+# Convert a board position to a byte.
 def to_mask(cell) -> int:
     result: int = 0
     for letter, mask in list(M_LOOKUP.items()):
@@ -238,16 +238,23 @@ class Game(object):
         self.moves: int = 0
         self.last = None
 
+    # Place the robots randomly on the board.
     def place_robots(self) -> Dict:
         result: Dict[str, int] = {}
         used = set()
         for color in COLORS:
             while True:
                 index = random.randint(0, 255)
+
+                # The center square.
                 if index in (119, 120, 135, 136):
                     continue
+
+                # Don't place a robot on any token.
                 if self.grid[index][-2:] in TOKENS:
                     continue
+
+                # Only one robot per position.
                 if index in used:
                     continue
                 result[color] = index
@@ -265,19 +272,28 @@ class Game(object):
         if self.last == (color, REVERSE[direction]):
             return False
         index = self.robots[color]
+
+        # A robot cannot move through a wall.
         if direction in self.grid[index]:
             return False
         new_index = index + OFFSET[direction]
+
+        # A robot cannot overlap with another robot.
         if new_index in iter(self.robots.values()):
             return False
         return True
 
-    def compute_move(self, color, direction):
+    def compute_move(self, color, direction) -> int:
         index = self.robots[color]
         robots = list(self.robots.values())
         while True:
+            # A robot must stop moving once it encounters a wall. This check
+            # works because each wall is referenced twice, by the position on
+            # each side of the wall.
             if direction in self.grid[index]:
                 break
+
+            # A robot cannot overlap with another robot.
             new_index = index + OFFSET[direction]
             if new_index in robots:
                 break
@@ -287,9 +303,14 @@ class Game(object):
     def do_move(self, color, direction):
         start = self.robots[color]
         last = self.last
+
+        # The reverse of the previous move is not allowed; undo should be used
+        # instead.
         if last == (color, REVERSE[direction]):
             raise Exception
         end = self.compute_move(color, direction)
+
+        # Don't count a move that wouldn't change the position of the robot.
         if start == end:
             raise Exception
         self.moves += 1
@@ -303,6 +324,8 @@ class Game(object):
         self.robots[color] = start
         self.last = last
 
+    # Return the list of valid directions for a next move, for each robot,
+    # in a stable ordering wrt. robot color.
     def get_moves(self, colors=None):
         result: List = []
         colors = colors or COLORS
@@ -352,6 +375,7 @@ class Game(object):
                 return result
         return None
 
+    # Export the game state for use by the C-based solver.
     def export(self):
         grid = []
         token = None

@@ -1,6 +1,8 @@
-__pycache__/*
-_ricochet
-*.code-workspace
+rroboter/__pycache__/*
+.venv/
 
-# Added by cargo
-/target
+rroboter/_ricochet
+rroboter/*.so
+target/
+
+*.code-workspace

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from typing import List
 
+import rroboter
 import wx
 import sys
 import model
@@ -117,7 +118,7 @@ class View(wx.Panel):
             for i in range(16):
                 x: int = i * size
                 y: int = j * size
-                index = model.idx(i, j)
+                index = rroboter.idx(i, j)
                 cell = self.game.grid[index]
                 robot = self.game.get_robot(index)
                 # border
