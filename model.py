@@ -27,9 +27,9 @@ OFFSET: Dict[str, int] = {
 
 # Masks
 M_NORTH: int = 0x01
-M_EAST: int  = 0x02
+M_EAST: int = 0x02
 M_SOUTH: int = 0x04
-M_WEST: int  = 0x08
+M_WEST: int = 0x08
 M_ROBOT: int = 0x10
 
 M_LOOKUP: Dict[str, int] = {
@@ -171,14 +171,17 @@ ROTATE_WALL: Dict[str, str] = {
     WEST: NORTH,
 }
 
+
 # Helper Functions
 def idx(x, y, size=16):
     return y * size + x
+
 
 def xy(index, size=16):
     x = index % size
     y = index // size
     return (x, y)
+
 
 def rotate_quad(data, times=1):
     for i in range(times):
@@ -186,6 +189,7 @@ def rotate_quad(data, times=1):
         result = ["".join(ROTATE_WALL.get(c, c) for c in x) for x in result]
         data = result
     return data
+
 
 def create_grid(quads=None):
     if quads is None:
@@ -204,12 +208,14 @@ def create_grid(quads=None):
             result[index] = data
     return result
 
+
 def to_mask(cell) -> int:
     result: int = 0
     for letter, mask in list(M_LOOKUP.items()):
         if letter in cell:
             result |= mask
     return result
+
 
 # Game
 class Game(object):
@@ -219,6 +225,7 @@ class Game(object):
         robots = [226, 48, 43, 18]
         token = "BT"
         return Game(quads=quads, robots=robots, token=token)
+
     def __init__(self, seed=None, quads=None, robots=None, token=None):
         if seed is not None:
             random.seed(seed)
@@ -230,6 +237,7 @@ class Game(object):
         self.token: str = token or random.choice(TOKENS)
         self.moves: int = 0
         self.last = None
+
     def place_robots(self) -> Dict:
         result: Dict[str, int] = {}
         used = set()
@@ -246,11 +254,13 @@ class Game(object):
                 used.add(index)
                 break
         return result
+
     def get_robot(self, index):
         for color, position in self.robots.items():
             if position == index:
                 return color
         return None
+
     def can_move(self, color, direction) -> bool:
         if self.last == (color, REVERSE[direction]):
             return False
@@ -261,6 +271,7 @@ class Game(object):
         if new_index in iter(self.robots.values()):
             return False
         return True
+
     def compute_move(self, color, direction):
         index = self.robots[color]
         robots = list(self.robots.values())
@@ -272,6 +283,7 @@ class Game(object):
                 break
             index = new_index
         return index
+
     def do_move(self, color, direction):
         start = self.robots[color]
         last = self.last
@@ -284,11 +296,13 @@ class Game(object):
         self.robots[color] = end
         self.last = (color, direction)
         return (color, start, last)
+
     def undo_move(self, data):
         color, start, last = data
         self.moves -= 1
         self.robots[color] = start
         self.last = last
+
     def get_moves(self, colors=None):
         result: List = []
         colors = colors or COLORS
@@ -297,19 +311,23 @@ class Game(object):
                 if self.can_move(color, direction):
                     result.append((color, direction))
         return result
+
     def over(self):
         color = self.token[0]
         return self.token in self.grid[self.robots[color]]
+
     def key(self):
         return tuple(self.robots.values())
+
     def search(self):
         max_depth = 1
         while True:
-            #print "Searching to depth:", max_depth
+            # print "Searching to depth:", max_depth
             result = self._search([], set(), 0, max_depth)
             if result is not None:
                 return result
             max_depth += 1
+
     def _search(self, path, memo, depth, max_depth):
         if self.over():
             return list(path)
@@ -333,6 +351,7 @@ class Game(object):
             if result:
                 return result
         return None
+
     def export(self):
         grid = []
         token = None

@@ -6,6 +6,7 @@ import sys
 import model
 import ricochet
 
+
 class View(wx.Panel):
     def __init__(self, parent, game):
         wx.Panel.__init__(self, parent, style=wx.WANTS_CHARS)
@@ -18,31 +19,38 @@ class View(wx.Panel):
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
+
     def solve(self):
-        #self.path = self.game.search()
+        # self.path = self.game.search()
         self.path = ricochet.search(self.game, self.callback)
         print(", ".join(("".join(move) for move in self.path)))
         self.on_solve()
+
     def callback(self, depth, nodes, inner, hits):
         print("Depth: %d, Nodes: %d (%d inner, %d hits)" % (depth, nodes, inner, hits))
+
     def on_solve(self):
         if not self.path:
             return
         self.do_move(*self.path.pop(0))
         self.Refresh()
         wx.CallLater(200, self.on_solve)
+
     def do_move(self, color, direction):
         start = self.game.robots[color]
         end = self.game.compute_move(color, direction)
         data = self.game.do_move(color, direction)
         self.undo.append(data)
         self.lines.append((color, start, end))
+
     def undo_move(self):
         self.game.undo_move(self.undo.pop(-1))
         self.lines.pop(-1)
+
     def on_size(self, event):
         event.Skip()
         self.Refresh()
+
     def on_key_down(self, event):
         code = event.GetKeyCode()
         if code == wx.WXK_ESCAPE:
@@ -77,6 +85,7 @@ class View(wx.Panel):
                 except Exception:
                     pass
                 self.Refresh()
+
     def on_paint(self, event):
         colors = {
             model.RED: wx.Colour(178, 34, 34),
@@ -109,7 +118,7 @@ class View(wx.Panel):
                 x: int = i * size
                 y: int = j * size
                 index = model.idx(i, j)
-                cell  = self.game.grid[index]
+                cell = self.game.grid[index]
                 robot = self.game.get_robot(index)
                 # border
                 dc.SetPen(wx.BLACK_PEN)
@@ -146,14 +155,16 @@ class View(wx.Panel):
                     dc.DrawRectangle(x, y, wall, size + 1)
         dc.DrawText(str(self.game.moves), wall + 1, wall + 1)
 
+
 class Frame(wx.Frame):
     def __init__(self, seed=None):
-        wx.Frame.__init__(self, None, -1, 'Ricochet Robot!')
+        wx.Frame.__init__(self, None, -1, "Ricochet Robot!")
         game = model.Game(seed)
         # game = model.Game.hardest()
         self.view = View(self, game)
         self.view.SetSize((800, 800))
         self.Fit()
+
 
 def main():
     app = wx.App(False)
@@ -163,5 +174,6 @@ def main():
     frame.Show()
     app.MainLoop()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

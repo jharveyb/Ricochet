@@ -17,6 +17,7 @@ DIRECTIONS: Dict[int, str] = {
 
 dll = CDLL("./_ricochet")
 
+
 class Game(Structure):
     _fields_ = [
         ("grid", c_uint * 256),
@@ -26,7 +27,9 @@ class Game(Structure):
         ("last", c_uint),
     ]
 
+
 CALLBACK_FUNC = CFUNCTYPE(None, c_uint, c_uint, c_uint, c_uint)
+
 
 def search(game, callback=None):
     callback = CALLBACK_FUNC(callback) if callback else None
@@ -46,28 +49,32 @@ def search(game, callback=None):
     depth = dll.search(byref(game), path, callback)
     result = []
     for value in path.raw[:depth]:
-        color = colors[(value >> 4) & 0x0f]
-        direction = DIRECTIONS[value & 0x0f]
+        color = colors[(value >> 4) & 0x0F]
+        direction = DIRECTIONS[value & 0x0F]
         result.append((color, direction))
     return result
+
 
 if __name__ == "__main__":
     import model
     import time
     import random
     import collections
+
     count = 0
     best = (0, 0)
     hist = collections.defaultdict(int)
+
     def callback(depth, nodes, inner, hits):
         print("Depth: %d, Nodes: %d (%d inner, %d hits)" % (depth, nodes, inner, hits))
+
     seed: int = 0
     while True:
         count += 1
-        #seed = random.randint(0, 0x7fffffff)
+        # seed = random.randint(0, 0x7fffffff)
         seed += 1
         start = time.clock()
-        path = search(model.Game(seed))#, callback)
+        path = search(model.Game(seed))  # , callback)
         moves = len(path)
         hist[moves] += 1
         key = (moves, seed)
@@ -76,6 +83,6 @@ if __name__ == "__main__":
         path = ["".join(move) for move in path]
         path = ",".join(path)
         duration = time.clock() - start
-        #print "%d. %2d (%.3f) %s [%s]"% (count, moves, duration, best, path)
-        #print dict(hist)
+        # print "%d. %2d (%.3f) %s [%s]"% (count, moves, duration, best, path)
+        # print dict(hist)
         print("%d %d [%s]" % (seed, moves, path))
